@@ -1,0 +1,12 @@
+name "i2clib"
+
+import_types_from "i2clibTypes.hpp"
+import_types_from "std"
+
+# Driver for the PCA9685, a 16-channels, 12-bit PWM driver chip
+task_context "PCA9685" do
+    needs_configuration
+
+    periodic 0.1
+end
+
