@@ -6,5 +6,8 @@
   <license>MIT</license>
 
   <depend package="base/cmake" />
+  <depend package="base/orogen/types" />
+  <depend package="drivers/orogen/raw_io" />
   <depend package="drivers/i2clib" />
+  <test_depend package="google-test" />
 </package>

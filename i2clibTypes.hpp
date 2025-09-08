@@ -1,14 +1,75 @@
 #ifndef i2clib_TYPES_HPP
 #define i2clib_TYPES_HPP
 
-/* If you need to define types specific to your oroGen components, define them
- * here. Required headers must be included explicitly
- *
- * However, it is common that you will only import types from your library, in
- * which case you do not need this file
- */
+#include <cstdint>
+#include <base/Time.hpp>
+#include <base/Float.hpp>
 
 namespace i2clib {
+    /** Common i2c access configuration */
+    struct I2CConfiguration {
+        /** Path to the i2c character device */
+        std::string device_path;
+
+        /** i2c transaction timeout */
+        base::Time timeout = base::Time::fromMilliseconds(100);
+    };
+
+    /** Configuration of a PCA9685 chip */
+    struct PCA9685Configuration {
+        /** Address on the i2c bus */
+        int i2c_address = 0;
+
+        /** Change the duration of the PWM cycle
+         *
+         * Internally, the chip allows for the selection of a PWM period based
+         * on a 'prescale' parameter that can be set from 3 to 255. The
+         * available periods depend on the oscillator frequency (25MHz by
+         * default, set \c external_oscillator_frequency to use an external oscillator
+         * and provide its frequency).
+         *
+         * The chip's datasheet explains how to compute the prescale parameter that is
+         * closest to a desired period (given the oscillator frequency). Note that this
+         * might not be the prescale parameter you want. Depending on the devices you are
+         * controlling with the PWM, you might need a period of "at least" some duration.
+         * The i2c_pca9685_ctl tool has `period-to-prescale` and `prescale-to-period` to
+         * help you play with the values and select the one that is appropriate.
+         */
+        std::uint8_t prescale = 3;
+
+        /** Frequency of an external oscillator, in Hz
+         *
+         * If left unset, the component will assume that the internal oscillator
+         * is meant to be used
+         *
+         * Note that while the frequency value is only used internally in the driver
+         * (not used by the hardware itself), the fact that an external oscillator
+         * should be used cannot be "unset" without a chip reset.
+         *
+         * In other words, once this is set to not-NaN, setting it back to NaN requires
+         * resetting the hardware.
+         */
+        float external_oscillator_frequency = base::unset<float>();
+
+        /** Range of continguous PWMs
+         *
+         * The default is the range representing all of the PWMs of the chip
+         */
+        struct PWMRange {
+            int start = 0;
+            int size = 16;
+        };
+
+        /** List of PWMs ranges to be controlled
+         *
+         * The command input will be interpreted as the list of duty durations
+         * following the ordering set by this vector.
+         *
+         * It is *highly* recommended to group in as few ranges as possible. Not
+         * doing so will have a very bad effect on the utilization of the i2c bus
+         */
+        std::vector<PWMRange> ranges {PWMRange()};
+    };
 }
 
 #endif

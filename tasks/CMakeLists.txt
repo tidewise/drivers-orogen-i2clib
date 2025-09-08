@@ -2,7 +2,7 @@
 
 include(i2clibTaskLib)
 ADD_LIBRARY(${I2CLIB_TASKLIB_NAME} SHARED
-    ${I2CLIB_TASKLIB_SOURCES})
+    ${I2CLIB_TASKLIB_SOURCES} PCA9685Helpers.cpp)
 add_dependencies(${I2CLIB_TASKLIB_NAME}
     regen-typekit)
 

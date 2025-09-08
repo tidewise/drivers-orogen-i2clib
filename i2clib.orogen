@@ -1,12 +1,25 @@
 name "i2clib"
 
-import_types_from "i2clibTypes.hpp"
+using_library "base-logging", typekit: false
+using_library "i2clib"
+
+import_types_from "base"
+import_types_from "raw_io"
 import_types_from "std"
 
+import_types_from "i2clibTypes.hpp"
+
 # Driver for the PCA9685, a 16-channels, 12-bit PWM driver chip
-task_context "PCA9685" do
+task_context "PCA9685Task" do
     needs_configuration
 
-    periodic 0.1
-end
+    # Path to the i2c character device
+    property "i2c_configuration", "/i2clib/I2CConfiguration"
 
+    # The chip configuration
+    property "configuration", "/i2clib/PCA9685Configuration"
+
+    input_port "cmd", "/raw_io/PWMDutyDurations"
+
+    port_driven
+end
