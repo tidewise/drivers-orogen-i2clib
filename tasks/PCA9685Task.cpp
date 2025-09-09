@@ -45,11 +45,20 @@ bool PCA9685Task::configureHook()
     if (!PCA9685TaskBase::configureHook())
         return false;
 
+    auto conf = _configuration.get();
+    pca9685helpers::validateRanges(conf.ranges);
+    m_ranges = conf.ranges;
+
+    tie(m_stop_ranges, m_stop_command) = convertAutoBehaviour(conf.stop_behaviour);
+    tie(m_timeout_ranges, m_timeout_command) =
+        convertAutoBehaviour(conf.timeout_behaviour);
+    pca9685helpers::validateRanges(m_stop_ranges);
+    pca9685helpers::validateRanges(m_timeout_ranges);
+
     auto i2c_conf = _i2c_configuration.get();
     auto i2c = make_unique<I2CBus>(i2c_conf.device_path);
     i2c->setTimeout(i2c_conf.timeout);
 
-    auto conf = _configuration.get();
     auto device = make_unique<PCA9685>(*m_i2c, conf.i2c_address);
     device->writeSleepMode();
     device->writePrescale(conf.prescale);
@@ -63,17 +72,7 @@ bool PCA9685Task::configureHook()
 
     m_i2c = move(i2c);
     m_device = move(device);
-    m_ranges = conf.ranges;
-    m_expected_cmd_size = pca9685helpers::expectedDurationsSize(m_ranges);
     m_timeout = conf.timeout;
-
-    tie(m_stop_ranges, m_stop_command) = convertAutoBehaviour(conf.stop_behaviour);
-    tie(m_timeout_ranges, m_timeout_command) =
-        convertAutoBehaviour(conf.timeout_behaviour);
-
-    pca9685helpers::validateRanges(m_ranges);
-    pca9685helpers::validateRanges(m_stop_ranges);
-    pca9685helpers::validateRanges(m_timeout_ranges);
 
     return true;
 }

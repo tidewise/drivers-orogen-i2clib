@@ -22,7 +22,6 @@ namespace i2clib {
 
         raw_io::PWMDutyDurations m_cmd;
         std::vector<PWMRange> m_ranges;
-        size_t m_expected_cmd_size = 0;
 
         std::vector<PWMRange> m_stop_ranges;
         PWMDutyDurations m_stop_command;
