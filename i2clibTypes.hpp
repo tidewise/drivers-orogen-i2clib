@@ -19,9 +19,6 @@ namespace i2clib {
     struct PCA9685Configuration {
         static constexpr int PWM_COUNT = 16;
 
-        /** Address on the i2c bus */
-        int i2c_address = 0;
-
         /** Change the duration of the PWM cycle
          *
          * Internally, the chip allows for the selection of a PWM period based

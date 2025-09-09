@@ -59,7 +59,7 @@ bool PCA9685Task::configureHook()
     auto i2c = make_unique<I2CBus>(i2c_conf.device_path);
     i2c->setTimeout(i2c_conf.timeout);
 
-    auto device = make_unique<PCA9685>(*m_i2c, conf.i2c_address);
+    auto device = make_unique<PCA9685>(*m_i2c, _i2c_address.get());
     device->writeSleepMode();
     device->writePrescale(conf.prescale);
 
