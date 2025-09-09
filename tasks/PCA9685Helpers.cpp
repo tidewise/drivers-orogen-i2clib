@@ -44,6 +44,9 @@ std::vector<MappedCommand> i2clib::pca9685helpers::mapCommand(
     auto src_begin = durations.on_durations.begin();
     for (auto const& r : ranges) {
         auto src_end = src_begin + r.size;
+        if (src_end > durations.on_durations.end()) {
+            throw std::invalid_argument("PWM command vector too small");
+        }
 
         MappedCommand cmd{.pwm = r.start};
         cmd.durations.resize(r.size);
@@ -51,6 +54,10 @@ std::vector<MappedCommand> i2clib::pca9685helpers::mapCommand(
         result.emplace_back(move(cmd));
 
         src_begin = src_end;
+    }
+
+    if (src_begin != durations.on_durations.end()) {
+        throw std::invalid_argument("PWM command vector too big");
     }
     return result;
 }

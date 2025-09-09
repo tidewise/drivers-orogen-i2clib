@@ -12,14 +12,29 @@ namespace i2clib {
     class PCA9685Task : public PCA9685TaskBase {
         friend class PCA9685TaskBase;
 
+        using PWMRange = PCA9685Configuration::PWMRange;
+        using PWMDutyDurations = raw_io::PWMDutyDurations;
+
     protected:
         std::unique_ptr<I2CBus> m_i2c;
         std::unique_ptr<PCA9685> m_device;
         uint32_t m_pwm_period = 0;
 
         raw_io::PWMDutyDurations m_cmd;
-        std::vector<PCA9685Configuration::PWMRange> m_ranges;
+        std::vector<PWMRange> m_ranges;
         size_t m_expected_cmd_size = 0;
+
+        std::vector<PWMRange> m_stop_ranges;
+        PWMDutyDurations m_stop_command;
+
+        std::vector<PWMRange> m_timeout_ranges;
+        PWMDutyDurations m_timeout_command;
+
+        base::Time m_timeout;
+        base::Time m_deadline;
+
+        void writeCommand(raw_io::PWMDutyDurations const& cmd,
+            std::vector<PWMRange> const& ranges);
 
     public:
         /** TaskContext constructor for PCA9685Task

@@ -1,9 +1,9 @@
 #ifndef i2clib_TYPES_HPP
 #define i2clib_TYPES_HPP
 
-#include <cstdint>
-#include <base/Time.hpp>
 #include <base/Float.hpp>
+#include <base/Time.hpp>
+#include <cstdint>
 
 namespace i2clib {
     /** Common i2c access configuration */
@@ -17,6 +17,8 @@ namespace i2clib {
 
     /** Configuration of a PCA9685 chip */
     struct PCA9685Configuration {
+        static constexpr int PWM_COUNT = 16;
+
         /** Address on the i2c bus */
         int i2c_address = 0;
 
@@ -57,7 +59,7 @@ namespace i2clib {
          */
         struct PWMRange {
             int start = 0;
-            int size = 16;
+            int size = PWM_COUNT;
         };
 
         /** List of PWMs ranges to be controlled
@@ -68,9 +70,29 @@ namespace i2clib {
          * It is *highly* recommended to group in as few ranges as possible. Not
          * doing so will have a very bad effect on the utilization of the i2c bus
          */
-        std::vector<PWMRange> ranges {PWMRange()};
+        std::vector<PWMRange> ranges{PWMRange()};
+
+        /** Structure containing the expected behaviour on timeout and stop */
+        struct PWMAutoBehaviour : public PWMRange {
+            /** Value written on the PWM if no commands have been received for \c timeout
+             * It is also the value written on component start
+             */
+            uint32_t on_duration = 0;
+        };
+
+        /** Duration after which the component will write \c timeout_on_duration
+         * on the PWMs
+         */
+        base::Time timeout{base::Time::fromMilliseconds(100)};
+
+        /** Per-PWM parameter for timeout behaviour
+         */
+        std::vector<PWMAutoBehaviour> timeout_behaviour;
+
+        /** Per-PWM parameter for stop behaviour
+         */
+        std::vector<PWMAutoBehaviour> stop_behaviour;
     };
 }
 
 #endif
-

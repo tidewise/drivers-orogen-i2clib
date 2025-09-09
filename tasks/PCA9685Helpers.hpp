@@ -12,6 +12,10 @@ namespace i2clib {
         struct MappedCommand {
             int pwm;
             std::vector<uint32_t> durations;
+
+            bool operator==(MappedCommand const& other) const {
+                return pwm == other.pwm && durations == other.durations;
+            }
         };
 
         /** Validate the given set of ranges
