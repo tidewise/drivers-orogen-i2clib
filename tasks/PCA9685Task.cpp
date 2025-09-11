@@ -106,6 +106,8 @@ void PCA9685Task::writeCommand(PWMDutyDurations const& cmd, vector<PWMRange> con
     for (auto const& m : mapped) {
         m_device->writeDutyTimes(m.pwm, m.durations, m_pwm_period);
     }
+
+    _status.write(cmd);
 }
 void PCA9685Task::errorHook()
 {
