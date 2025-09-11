@@ -1,43 +1,51 @@
 /* Generated from orogen/lib/orogen/templates/tasks/Task.hpp */
 
-#ifndef I2CLIB_PCA9685_TASK_HPP
-#define I2CLIB_PCA9685_TASK_HPP
+#ifndef I2CLIB_PCA9685TASK_TASK_HPP
+#define I2CLIB_PCA9685TASK_TASK_HPP
 
-#include "i2clib/PCA9685Base.hpp"
+#include "i2clib/PCA9685TaskBase.hpp"
 
-namespace i2clib{
+namespace i2clib {
+    class I2CBus;
+    class PCA9685;
 
-    /*! \class PCA9685
-     * \brief The task context provides and requires services. It uses an ExecutionEngine to perform its functions.
-     * Essential interfaces are operations, data flow ports and properties. These interfaces have been defined using the oroGen specification.
-     * In order to modify the interfaces you should (re)use oroGen and rely on the associated workflow.
-     * Driver for the PCA9685, a 16-channels, 12-bit PWM driver chip
-     * \details
-     * The name of a TaskContext is primarily defined via:
-     \verbatim
-     deployment 'deployment_name'
-         task('custom_task_name','i2clib::PCA9685')
-     end
-     \endverbatim
-     *  It can be dynamically adapted when the deployment is called with a prefix argument.
-     */
-    class PCA9685 : public PCA9685Base
-    {
-	friend class PCA9685Base;
+    class PCA9685Task : public PCA9685TaskBase {
+        friend class PCA9685TaskBase;
+
+        using PWMRange = PCA9685Configuration::PWMRange;
+        using PWMDutyDurations = raw_io::PWMDutyDurations;
+
     protected:
+        std::unique_ptr<I2CBus> m_i2c;
+        std::unique_ptr<PCA9685> m_device;
+        uint32_t m_pwm_period = 0;
 
+        raw_io::PWMDutyDurations m_cmd;
+        std::vector<PWMRange> m_ranges;
 
+        std::vector<PWMRange> m_stop_ranges;
+        PWMDutyDurations m_stop_command;
+
+        std::vector<PWMRange> m_timeout_ranges;
+        PWMDutyDurations m_timeout_command;
+
+        base::Time m_timeout;
+        base::Time m_deadline;
+
+        void writeCommand(raw_io::PWMDutyDurations const& cmd,
+            std::vector<PWMRange> const& ranges);
 
     public:
-        /** TaskContext constructor for PCA9685
-         * \param name Name of the task. This name needs to be unique to make it identifiable via nameservices.
-         * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
+        /** TaskContext constructor for PCA9685Task
+         * \param name Name of the task. This name needs to be unique to make it
+         * identifiable via nameservices. \param initial_state The initial TaskState
+         * of the TaskContext. Default is Stopped state.
          */
-        PCA9685(std::string const& name = "i2clib::PCA9685");
+        PCA9685Task(std::string const& name = "i2clib::PCA9685Task");
 
-        /** Default deconstructor of PCA9685
+        /** Default deconstructor of PCA9685Task
          */
-	~PCA9685();
+        ~PCA9685Task();
 
         /** This hook is called by Orocos when the state machine transitions
          * from PreOperational to Stopped. If it returns false, then the
@@ -100,4 +108,3 @@ namespace i2clib{
 }
 
 #endif
-
