@@ -9,6 +9,7 @@ using namespace raw_io;
 using namespace std;
 
 using PWMRange = PCA9685Configuration::PWMRange;
+using PWMAutoBehaviour = PCA9685Configuration::PWMAutoBehaviour;
 
 struct PCA9685HelpersTest : public ::testing::Test {};
 
@@ -97,4 +98,21 @@ TEST_F(PCA9685HelpersTest, it_throws_if_the_input_command_is_too_big)
     };
 
     ASSERT_THROW(pca9685helpers::mapCommand(ranges, cmd), std::invalid_argument);
+}
+
+TEST_F(PCA9685HelpersTest,
+    it_converts_the_timeout_specification_into_commands_compatible_with_mapCommand)
+{
+    vector<PWMAutoBehaviour> spec = {
+        PWMAutoBehaviour{PWMRange{.start = 1, .size = 2}, .on_duration = 5},
+        PWMAutoBehaviour{PWMRange{.start = 4, .size = 3}, .on_duration = 2}
+    };
+    auto result = pca9685helpers::convertAutoBehaviour(spec);
+    auto commands = pca9685helpers::mapCommand(result.first, result.second);
+
+    ASSERT_EQ(2, commands.size());
+    ASSERT_EQ(1, commands[0].pwm);
+    EXPECT_THAT(commands[0].durations, testing::ContainerEq(vector<uint32_t>{5, 5}));
+    ASSERT_EQ(4, commands[1].pwm);
+    EXPECT_THAT(commands[1].durations, testing::ContainerEq(vector<uint32_t>{2, 2, 2}));
 }

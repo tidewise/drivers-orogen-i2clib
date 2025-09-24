@@ -13,7 +13,8 @@ namespace i2clib {
             int pwm;
             std::vector<uint32_t> durations;
 
-            bool operator==(MappedCommand const& other) const {
+            bool operator==(MappedCommand const& other) const
+            {
                 return pwm == other.pwm && durations == other.durations;
             }
         };
@@ -39,6 +40,13 @@ namespace i2clib {
         std::vector<MappedCommand> mapCommand(
             std::vector<PCA9685Configuration::PWMRange> const& ranges,
             raw_io::PWMDutyDurations const& durations);
+
+        /** Convert the task's timeout/stop behaviour specification into commands
+         * compatible with \c mapCommand
+         */
+        std::pair<std::vector<PCA9685Configuration::PWMRange>, raw_io::PWMDutyDurations>
+        convertAutoBehaviour(
+            std::vector<PCA9685Configuration::PWMAutoBehaviour> const& behaviour);
     };
 }
 
