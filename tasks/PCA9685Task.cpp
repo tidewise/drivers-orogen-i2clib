@@ -28,18 +28,6 @@ PCA9685Task::~PCA9685Task()
 // hooks defined by Orocos::RTT. See PCA9685Task.hpp for more detailed
 // documentation about them.
 
-static pair<vector<PWMRange>, PWMDutyDurations> convertAutoBehaviour(
-    vector<PCA9685Configuration::PWMAutoBehaviour> const& behaviour)
-{
-    vector<PWMRange> ranges;
-    PWMDutyDurations command;
-    for (auto const& b : behaviour) {
-        ranges.push_back(b);
-        command.on_durations.push_back(b.on_duration);
-    }
-    return make_pair(ranges, command);
-}
-
 bool PCA9685Task::configureHook()
 {
     if (!PCA9685TaskBase::configureHook())
@@ -49,9 +37,10 @@ bool PCA9685Task::configureHook()
     pca9685helpers::validateRanges(conf.ranges);
     m_ranges = conf.ranges;
 
-    tie(m_stop_ranges, m_stop_command) = convertAutoBehaviour(conf.stop_behaviour);
+    tie(m_stop_ranges, m_stop_command) =
+        pca9685helpers::convertAutoBehaviour(conf.stop_behaviour);
     tie(m_timeout_ranges, m_timeout_command) =
-        convertAutoBehaviour(conf.timeout_behaviour);
+        pca9685helpers::convertAutoBehaviour(conf.timeout_behaviour);
     pca9685helpers::validateRanges(m_stop_ranges);
     pca9685helpers::validateRanges(m_timeout_ranges);
 
@@ -100,7 +89,8 @@ void PCA9685Task::updateHook()
     }
 }
 
-void PCA9685Task::writeCommand(PWMDutyDurations const& cmd, vector<PWMRange> const& ranges)
+void PCA9685Task::writeCommand(PWMDutyDurations const& cmd,
+    vector<PWMRange> const& ranges)
 {
     auto mapped = pca9685helpers::mapCommand(ranges, cmd);
     for (auto const& m : mapped) {
