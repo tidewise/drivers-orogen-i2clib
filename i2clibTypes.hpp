@@ -5,6 +5,8 @@
 #include <base/Time.hpp>
 #include <cstdint>
 
+#include <i2clib/MS5837.hpp>
+
 namespace i2clib {
     /** Common i2c access configuration */
     struct I2CConfiguration {
@@ -89,6 +91,26 @@ namespace i2clib {
         /** Per-PWM parameter for stop behaviour
          */
         std::vector<PWMAutoBehaviour> stop_behaviour;
+    };
+
+    struct MS5837Configuration {
+        MS5837::Models model = MS5837::MODEL_30BA;
+
+        /** Oversampling factor for temperature acquisition
+         *
+         * The oversampling factor, between 0 and 5 that corresponds to
+         * 256 samples up to 8192. Acquisition time grows exponentially with this
+         * parameter, from 640us to 20.5ms
+         */
+        int temperature_osr = 0;
+
+        /** Oversampling factor for pressure acquisition
+         *
+         * The oversampling factor, between 0 and 5 that corresponds to
+         * 256 samples up to 8192. Acquisition time grows exponentially with this
+         * parameter, from 640us to 20.5ms
+         */
+        int pressure_osr = 0;
     };
 }
 
