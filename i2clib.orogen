@@ -54,3 +54,22 @@ task_context "BMP280Task" do
 
     periodic 0.1
 end
+
+# Driver for the MS5837, a pressure sensor
+task_context "MS5837Task" do
+    needs_configuration
+
+    # Path to the i2c character device
+    property "i2c_configuration", "/i2clib/I2CConfiguration"
+
+    # The chip address on the i2c bus
+    property "i2c_address", "int"
+
+    # The chip configuration
+    property "configuration", "/i2clib/MS5837Configuration"
+
+    output_port "pressure", "/base/samples/Pressure"
+    output_port "temperature", "/base/samples/Temperature"
+
+    periodic 0.05
+end
