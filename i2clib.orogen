@@ -34,6 +34,8 @@ task_context "PCA9685Task" do
     output_port "status", "/raw_io/PWMDutyDurations"
 
     port_driven timeout: 0.1
+
+    exception_states "INVALID_INPUT_SIZE"
 end
 
 # Driver for the BMP280, a Bosch pressure sensor

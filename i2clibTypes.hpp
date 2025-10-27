@@ -71,26 +71,37 @@ namespace i2clib {
          */
         std::vector<PWMRange> ranges{PWMRange()};
 
-        /** Structure containing the expected behaviour on timeout and stop */
-        struct PWMAutoBehaviour : public PWMRange {
-            /** Value written on the PWM if no commands have been received for \c timeout
-             * It is also the value written on component start
+        /** Configuration of automated behaviours (init, stop and timeout) */
+        struct PWMAutoCommand {
+            enum Mode {
+                MODE_KEEP = 0,
+                MODE_SET = 1
+            };
+
+            Mode timeout_mode = MODE_KEEP;
+
+            /** Value written on the PWM on timeout if timeout_mode is MODE_SET.
+             * It is used as an initialization value on component start if the mode
+             * is MODE_KEEP.
              */
-            uint32_t on_duration = 0;
+            uint32_t timeout_on_duration = 0;
+
+            Mode stop_mode = MODE_KEEP;
+
+            /** Value written on the PWM on stop if stop_mode is MODE_SET.
+             */
+            uint32_t stop_on_duration = 0;
         };
 
-        /** Duration after which the component will write \c timeout_on_duration
-         * on the PWMs
+        /** Duration after which the component will write the configured timeout
+         * values
          */
         base::Time timeout{base::Time::fromMilliseconds(100)};
 
-        /** Per-PWM parameter for timeout behaviour
+        /** Per-PWM parameter for init, timeout and stop behaviour. It has to have the
+         * same size as the expected command vector
          */
-        std::vector<PWMAutoBehaviour> timeout_behaviour;
-
-        /** Per-PWM parameter for stop behaviour
-         */
-        std::vector<PWMAutoBehaviour> stop_behaviour;
+        std::vector<PWMAutoCommand> auto_behaviours;
     };
 
     struct MS5837Configuration {

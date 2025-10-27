@@ -61,15 +61,3 @@ std::vector<MappedCommand> i2clib::pca9685helpers::mapCommand(
     }
     return result;
 }
-
-pair<vector<PWMRange>, raw_io::PWMDutyDurations> i2clib::pca9685helpers::
-    convertAutoBehaviour(vector<PCA9685Configuration::PWMAutoBehaviour> const& behaviour)
-{
-    vector<PWMRange> ranges;
-    raw_io::PWMDutyDurations command;
-    for (auto const& b : behaviour) {
-        ranges.push_back(b);
-        command.on_durations.resize(command.on_durations.size() + b.size, b.on_duration);
-    }
-    return make_pair(ranges, command);
-}

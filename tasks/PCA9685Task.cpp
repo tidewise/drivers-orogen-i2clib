@@ -36,13 +36,16 @@ bool PCA9685Task::configureHook()
     auto conf = _configuration.get();
     pca9685helpers::validateRanges(conf.ranges);
     m_ranges = conf.ranges;
+    m_expected_command_size = pca9685helpers::expectedDurationsSize(m_ranges);
 
-    tie(m_stop_ranges, m_stop_command) =
-        pca9685helpers::convertAutoBehaviour(conf.stop_behaviour);
-    tie(m_timeout_ranges, m_timeout_command) =
-        pca9685helpers::convertAutoBehaviour(conf.timeout_behaviour);
-    pca9685helpers::validateRanges(m_stop_ranges);
-    pca9685helpers::validateRanges(m_timeout_ranges);
+    m_auto_behaviours = conf.auto_behaviours;
+    if (m_auto_behaviours.size() != m_expected_command_size) {
+        throw std::invalid_argument(
+            "invalid size for the auto_behaviours array of the configuration property, "
+            "got " +
+            to_string(m_auto_behaviours.size()) + " but was expecting " +
+            to_string(m_expected_command_size));
+    }
 
     auto i2c_conf = _i2c_configuration.get();
     auto i2c = make_unique<I2CBus>(i2c_conf.device_path);
@@ -71,7 +74,12 @@ bool PCA9685Task::startHook()
         return false;
 
     m_device->writeNormalMode();
-    writeCommand(m_timeout_command, m_timeout_ranges);
+
+    m_cmd.on_durations.clear();
+    for (auto const& cmd : m_auto_behaviours) {
+        m_cmd.on_durations.push_back(cmd.timeout_on_duration);
+    }
+    writeCommand(m_cmd, m_ranges);
     m_deadline = Time();
     return true;
 }
@@ -80,13 +88,23 @@ void PCA9685Task::updateHook()
 {
     PCA9685TaskBase::updateHook();
 
-    if (_cmd.read(m_cmd) == RTT::NewData) {
-        writeCommand(m_cmd, m_ranges);
+    PWMDutyDurations cmd;
+    if (_cmd.read(cmd) == RTT::NewData) {
+        if (cmd.on_durations.size() != m_expected_command_size) {
+            exception(INVALID_INPUT_SIZE);
+            return;
+        }
+
         m_deadline = Time::now() + m_timeout;
     }
     else if (Time::now() > m_deadline) {
-        writeCommand(m_timeout_command, m_timeout_ranges);
+        cmd = applyAutoValues(m_cmd,
+            m_auto_behaviours,
+            &PWMAutoCommand::timeout_mode,
+            &PWMAutoCommand::timeout_on_duration);
     }
+    writeCommand(cmd, m_ranges);
+    m_cmd = cmd;
 }
 
 void PCA9685Task::writeCommand(PWMDutyDurations const& cmd,
@@ -107,10 +125,36 @@ void PCA9685Task::stopHook()
 {
     PCA9685TaskBase::stopHook();
 
-    writeCommand(m_stop_command, m_stop_ranges);
+    auto stop_cmd = applyAutoValues(m_cmd,
+        m_auto_behaviours,
+        &PWMAutoCommand::stop_mode,
+        &PWMAutoCommand::stop_on_duration);
+    writeCommand(stop_cmd, m_ranges);
     m_device->writeSleepMode();
 }
 void PCA9685Task::cleanupHook()
 {
     PCA9685TaskBase::cleanupHook();
+}
+
+PWMDutyDurations PCA9685Task::applyAutoValues(PWMDutyDurations const& current,
+    vector<PWMAutoCommand> const& auto_cmd,
+    PWMAutoCommand::Mode PWMAutoCommand::*mode_field,
+    uint32_t PWMAutoCommand::*duration_field)
+{
+    if (current.on_durations.size() != auto_cmd.size()) {
+        throw std::invalid_argument(
+            "duty cycle and auto command size mismatch in applyTimeoutValue");
+    }
+
+    auto result = current;
+    for (size_t i = 0; i < auto_cmd.size(); ++i) {
+        auto pwm = auto_cmd[i];
+        auto mode = pwm.*mode_field;
+        auto on_duration = pwm.*duration_field;
+        if (mode == PWMAutoCommand::MODE_SET) {
+            result.on_durations[i] = on_duration;
+        }
+    }
+    return result;
 }
