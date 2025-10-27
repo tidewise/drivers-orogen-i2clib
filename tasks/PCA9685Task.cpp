@@ -115,7 +115,9 @@ void PCA9685Task::writeCommand(PWMDutyDurations const& cmd,
         m_device->writeDutyTimes(m.pwm, m.durations, m_pwm_period);
     }
 
-    _status.write(cmd);
+    auto status = cmd;
+    status.time = base::Time::now();
+    _status.write(status);
 }
 void PCA9685Task::errorHook()
 {
